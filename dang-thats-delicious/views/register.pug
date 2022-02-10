@@ -1,0 +1,21 @@
+extend layout
+include mixins/_loginForm
+
+block content
+    .inner
+        form.form(method="post")
+            h2= title
+
+            label(for="name") Name
+            input#name(name="name" value=(body && body.name) required)
+
+            label(for="email") Email Address
+            input#email(type="email" name="email" value=(body && body.email) required)
+
+            label(for="password") Password
+            input#password(type="password" name="password" value=(body && body.password) required)
+
+            label(for="password-confirm") Confirm Password
+            input#password-confirm(type="password" name="password-confirm" value=(body && body["password-confirm"]) required)
+
+            input.button(type="submit", value="Register")

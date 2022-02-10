@@ -1,0 +1,16 @@
+extend layout
+include mixins/_loginForm
+include mixins/_forgot
+
+block content
+    .inner
+        form.form(method="post")
+            h2= title 
+
+            label(for="password") Password
+            input#password(type="password" name="password" value=(body && body.password) required)
+
+            label(for="password-confirm") Confirm Password
+            input#password-confirm(type="password" name="password-confirm" value=(body && body["password-confirm"]) required)
+
+            input.button(type="submit", value="Reset Password")
