@@ -11,6 +11,10 @@ mongoose.connection.on('error', (err) => {
 // READY?! Let's go!
 
 
+// import all models
+require('./models/Recipe')
+
+
 // Start our app!
 const app = require('./app');
 app.set('port', process.env.PORT || 7777);

@@ -6,3 +6,7 @@ node_modules/
 dist/
 haters/
 *.env
+
+/express/public/images/photos/*
+/express/public/uploads/*
+!/express/public/uploads/store.png

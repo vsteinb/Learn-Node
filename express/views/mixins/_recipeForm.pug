@@ -1,0 +1,28 @@
+mixin recipeForm(recipe={})
+    form.card(action=`/add/${recipe._id || ''}` method="POST" enctype="multipart/form-data")
+        
+        //- name
+        label(for="name") Rezept für ...
+        input(type="text" name="name" value=recipe.name)
+
+        //- description
+        label(for="description") Beschreibung
+        textarea(name="description")= recipe.description
+
+        //- photo
+        label(for="photo") fertiges Gericht
+            input(type="file" name="photo" id="photo" accept="image/gif, image/png, image/jpeg")
+            if recipe.photo
+                img(src=`/uploads/${recipe.photo}` alt=recipe.name width="200")
+
+        //- tags
+        - const all_choices = ['Fisch', 'Fleisch', 'Vegetarisch', 'Vegan', 'Vorspeise', 'Hauptgericht', 'Beilage', 'Soße', 'Dessert', 'Snack']
+        - const tags = recipe.tags || []
+        ul.tags
+            each choice in all_choices 
+                .tag.tag__choice 
+                    input(type="checkbox" id=choice value=choice name="tags" checked=(tags.includes(choice)))
+                    label(for=choice) #{choice}
+
+        //- submit
+        input.button(type="submit" value="Speichern")
