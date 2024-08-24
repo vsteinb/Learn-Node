@@ -1,0 +1,86 @@
+version: "3.8"
+
+services:
+
+  # database
+  mongodb:
+    container_name: recipes-mongodb
+    image: mongo:7.0-rc
+    restart: unless-stopped
+    env_file: ./mongo.env.dev
+    networks:
+      - db
+    expose:
+      - 27017
+    command: --config /etc/mongo/mongod.conf
+    volumes:
+      - ./mongodb/mongod.conf:/etc/mongo/mongod.conf:ro
+      - ./logs/mongodb:/var/log/mongodb
+      - db:/data/db
+    security_opt:
+      - no-new-privileges:true
+
+
+  # web-interface for mongodb
+  mongo-express:
+    container_name: recipes-mongo-express
+    image: mongo-express:1
+    restart: unless-stopped
+    env_file: ./me.env.dev
+    networks:
+      - nginx
+      - db
+    expose:
+      - 8081
+    security_opt:
+      - no-new-privileges:true
+    depends_on:
+      - mongodb
+
+
+  # application backend
+  express:
+    container_name: recipes-express
+    build: ./express
+    restart: unless-stopped
+    env_file: ./express.env.dev
+    networks:
+      - nginx
+      - db
+    expose:
+      - 3000
+    command: docker_entrypoint.dev.sh
+    volumes:
+      - ./express:/app
+    security_opt:
+      - no-new-privileges:true
+    depends_on:
+      - mongodb
+
+  # webserver
+  nginx:
+    container_name: recipes-nginx
+    image: nginx:latest
+    restart: unless-stopped
+    networks:
+      - nginx
+    ports:
+      - 8000:80
+      # - 443:443
+    volumes:
+      - ./nginx:/etc/nginx:ro
+      - ./logs/nginx:/var/log/nginx/
+
+      # - static_volume:/home/ppServer/web/static:ro
+      # - media_volume:/home/ppServer/web/media:ro
+
+      # - /etc/letsencrypt:/etc/letsencrypt:ro
+    security_opt:
+      - no-new-privileges:true
+
+volumes:
+  db:
+
+networks:
+  db:
+  nginx:
