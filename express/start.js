@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+mongoose.set("strictQuery", true);
 
 // Connect to our Database and handle any bad connections
 mongoose.connect(process.env.DATABASE);

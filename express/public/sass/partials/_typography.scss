@@ -50,6 +50,8 @@ p {
   z-index: 2;
   line-height: 1.1;
   transform: skew(0, -3deg);
+  line-height: 1.1;
+  // inline link inside
   &--long {
     font-size: 30px;
   }
@@ -65,8 +67,6 @@ p {
     z-index: -1;
     transform: skew(-5deg);
   }
-  line-height: 1.1;
-  // inline link inside
   a {
     border-bottom: 0;
     $yellowa: rgba($yellow, 0.8);

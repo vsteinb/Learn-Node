@@ -6,7 +6,7 @@ const cookieParser = require('cookie-parser');
 const passport = require('passport');
 const promisify = require('es6-promisify');
 const flash = require('connect-flash');
-const expressValidator = require('express-validator');
+const {query: expressValidatorQuery, validationResult: expressValidatorResult } = require('express-validator');
 const routes = require('./routes/index');
 const helpers = require('./helpers');
 const errorHandlers = require('./handlers/errorHandlers');
@@ -25,8 +25,9 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Exposes a bunch of methods for validating data. Used heavily on userController.validateRegister
-app.use(expressValidator());
+// TODO different, see imports and https://express-validator.github.io/docs/guides/getting-started#sanitizing-inputs
+// // Exposes a bunch of methods for validating data. Used heavily on userController.validateRegister
+// app.use(expressValidator());
 
 // populates req.cookies with any cookies that came along with the request
 app.use(cookieParser());
