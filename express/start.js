@@ -12,7 +12,8 @@ mongoose.connection.on('error', (err) => {
 
 
 // import all models
-require('./models/Recipe')
+require('./models/Recipe');
+require('./models/User');
 
 
 // Start our app!

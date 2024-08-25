@@ -6,10 +6,10 @@ const cookieParser = require('cookie-parser');
 const passport = require('passport');
 const promisify = require('es6-promisify');
 const flash = require('connect-flash');
-const {query: expressValidatorQuery, validationResult: expressValidatorResult } = require('express-validator');
 const routes = require('./routes/index');
 const helpers = require('./helpers');
 const errorHandlers = require('./handlers/errorHandlers');
+require('./handlers/passport');
 
 // create our Express app
 const app = express();
@@ -24,10 +24,6 @@ app.use(express.static(path.join(__dirname, 'public')));
 // Takes the raw requests and turns them into usable properties on req.body
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-
-// TODO different, see imports and https://express-validator.github.io/docs/guides/getting-started#sanitizing-inputs
-// // Exposes a bunch of methods for validating data. Used heavily on userController.validateRegister
-// app.use(expressValidator());
 
 // populates req.cookies with any cookies that came along with the request
 app.use(cookieParser());

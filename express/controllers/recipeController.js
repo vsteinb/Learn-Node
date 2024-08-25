@@ -72,6 +72,24 @@ exports.updateRecipe = async (req, res) => {
         runValidators: true
     }).exec();
 
-    req.flash('success', `Du hast das Rezept für <b>${recipe.name}</b> erfolgreich angepasst! <a href="/recipe/${recipe.slug}">Rezept ansehen -></a>`);
+    req.flash('success', `Du hast das Rezept für <b>${recipe.name}</b> erfolgreich angepasst! <a href="/recipe/${recipe.slug}">Rezept ansehen &rarr;</a>`);
     res.redirect(`/recipe/${recipe._id}/edit`);
+};
+
+exports.getRecipeBySlug = async (req, res, next) => {
+    const recipe = await Recipe.findOne({slug: req.params.slug});
+    if (!recipe) { return next(); }
+
+    res.render("recipe", { title: recipe.name, recipe })
+};
+
+exports.getRecipesByTag = async (req, res) => {
+    const tag = req.params.tag;
+    const tagQuery = tag || { $exists: true };
+
+    const tagsPromise = Recipe.getTagsList();
+    const recipesPromise = Recipe.find({ tags: tagQuery });
+    const [tags, recipes] = await Promise.all([tagsPromise, recipesPromise]);
+
+    res.render('tag', { title: 'Tags', tags, tag, recipes });
 };

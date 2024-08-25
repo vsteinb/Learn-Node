@@ -1,5 +1,4 @@
 const mongoose = require('mongoose');
-mongoose.Promise = global.Promise;
 const slug = require('slugs');
 
 const recipeSchema = new mongoose.Schema({
@@ -24,15 +23,31 @@ const recipeSchema = new mongoose.Schema({
         default: Date.now
     },
 });
-recipeSchema.pre('save', function(next) {
+recipeSchema.pre('save', async function(next) {
 
     // set 'slug' based on 'name'
     if (this.isModified('name')) {
         this.slug = slug(this.name);
+
+        // in case of same slug, append numbers like ...-1, ...-2 and so on
+        const regex = new RegExp(`^(${this.slug})((-\d*)?)$`, i);
+        const recipesWithSlug = await this.constructor.find({ slug: regex });
+        if (recipesWithSlug.length) {
+            this.slug = `${this.slug}-${recipesWithSlug.length+1}`;
+        }
     }
 
     // continue on
     next();
 })
+
+recipeSchema.statics.getTagsList = function() {
+    return this.aggregate([
+        { $unwind: '$tags' },
+        { $group: { _id: '$tags', count: { $sum: 1}} },
+        { $sort: { count: -1, _id: 1 } }
+    ]);
+};
+
 
 module.exports = mongoose.model('Recipe', recipeSchema);

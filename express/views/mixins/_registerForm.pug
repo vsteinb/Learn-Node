@@ -1,0 +1,21 @@
+mixin registerForm()
+    form.form(action='/register' method='POST')
+        h2 Registrieren 
+
+        //- name
+        label(for='name') Name 
+        input(type='text' name='name' required)
+
+        //- name
+        label(for='email') Email 
+        input(type='email' name='email' required)
+
+        //- password
+        label(for='password') Passwort
+        input(type='password' name='password' required)
+
+        label(for='password-confirm') Passwort wiederholen
+        input(type='password' name='password-confirm' required)
+
+        //- submit
+        input.button(type='submit' value!='Registrieren &rarr;')
