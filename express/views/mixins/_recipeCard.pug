@@ -17,7 +17,7 @@ mixin recipeCard(recipe = {})
                         span= recipe.reviews.length
 
 
-            img(src=`/uploads/${recipe.photo || 'store.png'}`)
+            img(src=`/uploads/${recipe.photo || 'recipe.jpg'}`)
             h2.title 
                 a(href=`/recipe/${recipe.slug}`) #{recipe.name}
         .recipe__details 

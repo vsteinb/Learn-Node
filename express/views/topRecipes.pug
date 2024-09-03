@@ -16,7 +16,7 @@ block content
             each recipe, i in recipes 
                 tr 
                     td: a(href=`/recipe/${recipe.slug}`)
-                        img(src=`/uploads/${recipe.image || 'store.png'}` alt=recipe.name width=200)
+                        img(src=`/uploads/${recipe.image || 'recipe.jpg'}` alt=recipe.name width=200)
                     td= i+1
                     td: a(href=`/recipe/${recipe.slug}`)= recipe.name 
                     td= recipe.reviews.length

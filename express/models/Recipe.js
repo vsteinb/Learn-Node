@@ -31,7 +31,7 @@ const recipeSchema = new mongoose.Schema({
 });
 
 // example of a reverse lookup.
-// populate reviews on store lookups
+// populate reviews on recipe lookups
 recipeSchema.virtual('reviews', {
     ref: 'Review',  // what model to link
     localField: '_id',   // which field on this model?

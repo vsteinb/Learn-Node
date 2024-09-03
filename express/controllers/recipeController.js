@@ -120,7 +120,7 @@ exports.getRecipesByTag = async (req, res) => {
 
 exports.searchRecipes = async (req, res) => {
     const recipes = await Recipe
-        // find matching stores
+        // find matching recipes
         .find({
                 $text: { $search: req.query.q }
             }, {

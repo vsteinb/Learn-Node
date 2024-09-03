@@ -9,4 +9,4 @@ haters/
 
 /express/public/images/photos/*
 /express/public/uploads/*
-!/express/public/uploads/store.png
+!/express/public/uploads/recipe.jpg

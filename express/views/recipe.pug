@@ -6,7 +6,7 @@ include mixins/_reviewForm
 block content
     .single     
         .single__hero 
-            img.single__image(src=`/uploads/${recipe.photo || 'store.png'}`)
+            img.single__image(src=`/uploads/${recipe.photo || 'recipe.jpg'}`)
             h2.title.title--single 
                 a(href=`/recipe/${recipe.slug}`) #{recipe.name}
     
