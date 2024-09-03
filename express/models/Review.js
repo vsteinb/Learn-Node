@@ -31,6 +31,13 @@ function autopopulate(next) {
     this.populate('author');
     next();
 }
+
+function defaultSort(next) {
+    this.sort('-created');
+    next();
+}
+
+reviewSchema.pre('find', defaultSort);
 reviewSchema.pre('find', autopopulate);
 reviewSchema.pre('findOne', autopopulate);
 

@@ -53,7 +53,12 @@ function autopopulate(next) {
     this.populate('reviews');
     next();
 };
+function defaultSort(next) {
+    this.sort('name');
+    next();
+}
 
+recipeSchema.pre('find', defaultSort);
 recipeSchema.pre('find', autopopulate);
 recipeSchema.pre('findOne', autopopulate);
 recipeSchema.pre('save', async function(next) {

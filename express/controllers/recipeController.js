@@ -67,7 +67,7 @@ exports.getRecipes = async (req, res) => {
     const limit = 25;
     const skip = (page -1) * limit;
 
-    const recipesPromise = Recipe.find().sort('name').skip(skip).limit(limit);
+    const recipesPromise = Recipe.find().skip(skip).limit(limit);
     const countPromise = Recipe.count();
     const [recipes, count] = await Promise.all([recipesPromise, countPromise]);
     const pages = Math.ceil(count / limit);
