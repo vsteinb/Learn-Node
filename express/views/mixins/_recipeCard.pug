@@ -1,10 +1,22 @@
 mixin recipeCard(recipe = {})
     .recipe 
         .recipe__hero
-            .recipe__actions 
-                .recipe__action.recipe__action--edit
-                    a(href=`/recipe/${recipe._id}/edit`)
-                        != h.icon('pencil')
+            .recipe__actions
+                if user
+                    - const heartStrings = user.hearts.map(obj => obj.toString())
+                    - const heartClass = heartStrings.includes(recipe._id.toString()) ? 'heart__button--hearted' : ''
+                    .recipe__action.recipe__action--heart 
+                        form.heart(method="POST" action=`/api/v1/recipe/${recipe._id}/heart`)
+                            button.heart__button(type="submit" name="heart" class=heartClass)!= h.icon('heart')
+                if user && recipe.author.equals(user._id)
+                    .recipe__action.recipe__action--edit
+                        a(href=`/recipe/${recipe._id}/edit`)
+                            != h.icon('pencil')
+                if recipe.reviews 
+                    .recipe__action.recipe__action--count!= h.icon('review')
+                        span= recipe.reviews.length
+
+
             img(src=`/uploads/${recipe.photo || 'store.png'}`)
             h2.title 
                 a(href=`/recipe/${recipe.slug}`) #{recipe.name}

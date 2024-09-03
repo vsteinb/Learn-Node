@@ -18,7 +18,12 @@ const userSchema = new mongoose.Schema({
         type: String,
         required: 'Bitte gib einen Username an!',
         trim: true
-    }
+    },
+    resetPasswordToken: String,
+    resetPasswordExpires: Date,
+    hearts: [
+        { type: mongoose.Schema.ObjectId, ref: 'Recipe'}
+    ]
 });
 
 userSchema.virtual('gravatar').get(function() {

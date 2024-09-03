@@ -27,7 +27,7 @@ exports.registerValidationRules = () => [
 
 
 /** check for errors during validation */
-exports.validateRules = (view, title) => (req, res, next) => {
+exports.validateRules = (errorHandler) => (req, res, next) => {
     const errors = validator.validationResult(req);
     // handle errors
     if (!errors.isEmpty()) {
@@ -35,7 +35,7 @@ exports.validateRules = (view, title) => (req, res, next) => {
             .formatWith(error => error.msg)
             .array()
             .forEach(error => req.flash('error', error));
-        return res.render(view, { title, body: req.body, flashes: req.flash() });
+        return errorHandler(req, res);
     }
     
     // assign sanitized & validated data back to req.body
@@ -61,4 +61,23 @@ exports.loginForm = (req, res) => {
 
 exports.registerForm = (req, res) => {
     res.render('register', { title: 'Registrieren' });
+};
+
+exports.account = (req, res) => {
+    res.render('account', { title: 'Account bearbeiten' });
+};
+
+exports.updateAccount = async (req, res) => {
+    const updates = {
+        name: req.body.name,
+        email: req.body.email
+    };
+    await User.findOneAndUpdate(
+        { _id: req.user._id },
+        { $set: updates },
+        { runValidators: true, context: 'query' }
+    );
+
+    req.flash('success', 'Dein Account wurde angepasst!');
+    res.redirect('back');
 };

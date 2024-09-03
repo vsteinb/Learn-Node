@@ -7,6 +7,7 @@ const fs = require('fs');
 
 // moment.js is a handy library for displaying dates. We need this in our templates to display things like "Posted 5 minutes ago"
 exports.moment = require('moment');
+exports.moment.locale('de-DE');
 
 // Dump is a handy debugging function we can use to sort of "console.log" our data
 exports.dump = (obj) => JSON.stringify(obj, null, 2);
@@ -22,5 +23,4 @@ exports.menu = [
   { slug: '/tags', title: 'Tags', icon: 'tag', },
   { slug: '/top', title: 'Top', icon: 'top', },
   { slug: '/add', title: 'Rezept', icon: 'add', },
-  { slug: '/map', title: 'Orte', icon: 'map', },
 ];

@@ -1,0 +1,14 @@
+mixin reviewForm(recipe)
+    form.reviewer(action=`/review/${recipe._id}` method='POST')
+        //- text
+        textarea(name="text" placeholder="Hast du das Rezept Schonmal ausprobiert? Lass gerne dein Feedback hier ...")
+
+        .reviewer__meta
+            //- rating
+            .reviewer__stars 
+                each num in [5, 4, 3, 2, 1]
+                    input(type="radio" name="rating" id=`star${num}` required value=num)
+                    label(for=`star${num}`) #{num} Sterne
+
+            //- submit
+            input.button(type='submit' value!='Feedback senden &rarr;')

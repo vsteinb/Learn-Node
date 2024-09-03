@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const Recipe = mongoose.model('Recipe');
+const User = mongoose.model('User');
 const multer = require('multer');
 const jimp = require('jimp');
 const uuid = require('uuid');
@@ -40,6 +41,13 @@ exports.resize = async (req, res, next) => {
     next();
 };
 
+// merely a function to check the author, not a real middleware
+const isAuthor = (recipe, user) => {
+    if (!recipe.author.equals(user._id)) {
+        throw Error('Du bist nicht Autor*in dieses Rezepts!');
+    }
+}
+
 /****************** VIEWS ******************/
 
 exports.addRecipe = (req, res) => {
@@ -47,6 +55,7 @@ exports.addRecipe = (req, res) => {
 };
 
 exports.createRecipe = async (req, res) => {
+    req.body.author = req.user._id;
     const recipe = await (new Recipe(req.body)).save();
 
     req.flash('success', `Du hast das Rezept für <b>${recipe.name}</b> erfolgreich angelegt!`);
@@ -54,12 +63,27 @@ exports.createRecipe = async (req, res) => {
 };
 
 exports.getRecipes = async (req, res) => {
-    const recipes = await Recipe.find();
-    res.render('recipes', { title: 'Rezepte', recipes })
+    const page = req.params.page || 1;
+    const limit = 25;
+    const skip = (page -1) * limit;
+
+    const recipesPromise = Recipe.find().sort('name').skip(skip).limit(limit);
+    const countPromise = Recipe.count();
+    const [recipes, count] = await Promise.all([recipesPromise, countPromise]);
+    const pages = Math.ceil(count / limit);
+
+    if (!recipes.length) {
+        req.flash('info', `Seite ${page} gibt es leider nicht. Ich gebe dir stattdessen Seite ${pages}.`);
+        return res.redirect(`/recipes/page/${pages}`);
+    }
+
+    res.render('recipes', { title: 'Rezepte', recipes, pagination: {page, count, pages} });
 };
 
 exports.editRecipe = async (req, res) => {
     const recipe = await Recipe.findById(req.params.id);
+    isAuthor(recipe, req.user);
+
     res.render('editRecipe', {title: `${recipe.name} bearbeiten`, recipe})
 };
 
@@ -77,7 +101,7 @@ exports.updateRecipe = async (req, res) => {
 };
 
 exports.getRecipeBySlug = async (req, res, next) => {
-    const recipe = await Recipe.findOne({slug: req.params.slug});
+    const recipe = await Recipe.findOne({slug: req.params.slug}).populate("reviews");
     if (!recipe) { return next(); }
 
     res.render("recipe", { title: recipe.name, recipe })
@@ -92,4 +116,48 @@ exports.getRecipesByTag = async (req, res) => {
     const [tags, recipes] = await Promise.all([tagsPromise, recipesPromise]);
 
     res.render('tag', { title: 'Tags', tags, tag, recipes });
+};
+
+exports.searchRecipes = async (req, res) => {
+    const recipes = await Recipe
+        // find matching stores
+        .find({
+                $text: { $search: req.query.q }
+            }, {
+                score: { $meta: 'textScore' }
+            })
+        // sort them by 'best matching' the text query
+        .sort({
+            score: { $meta: 'textScore' }
+        })
+        // limit to 5 only
+        .limit(5);
+
+    res.json(recipes);
+};
+
+exports.heartRecipe = async (req, res) => {
+    if ((await Recipe.exists({_id: req.params.id})) === null) {
+        throw Error("Das Rezept gibt es nicht.");
+    }
+    const hearts = req.user.hearts.map(obj => obj.toString());
+
+    const operator = hearts.includes(req.params.id) ? '$pull' : '$addToSet';
+    const user = await User.findOneAndUpdate(
+        req.user._id,
+        { [operator]: { hearts: req.params.id} },
+        { new: true }
+    );
+    res.json(user);
+};
+
+exports.getHearts = async (req, res) => {
+    const recipes = await Recipe.find({_id: { $in: req.user.hearts }});
+    res.render('recipes', { title: 'Fav Rezepte', recipes });
+};
+
+
+exports.getTopRecipes = async (req, res) => {
+    const recipes = await Recipe.getTopRecipes();
+    res.render('topRecipes', { title: 'Lieblingsrezepte', recipes });
 };

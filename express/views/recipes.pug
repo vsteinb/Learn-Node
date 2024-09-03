@@ -1,5 +1,6 @@
 extends layout 
 include mixins/_recipeCard
+include mixins/_pagination
 
 block content
     .inner 
@@ -7,3 +8,5 @@ block content
         .recipes 
             each recipe in recipes 
                 +recipeCard(recipe)
+
+        +pagination(pagination.page, pagination.pages, pagination.count)

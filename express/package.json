@@ -31,6 +31,7 @@
     "juice": "8.0.0",
     "md5": "2.3.0",
     "moment": "^2.30.1",
+    "mongo-sanitize": "^1.1.0",
     "mongodb": "^6.8.0",
     "mongoose": "^6.13.0",
     "mongoose-mongodb-errors": "0.0.2",

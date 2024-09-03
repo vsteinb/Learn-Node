@@ -1,0 +1,12 @@
+mixin pagination(current, pages, count)
+    .pagination 
+        .pagination__prev 
+            if current > 1
+                a(href=`/recipes/page/${current-1}`) zurück
+        
+        .pagination__text 
+            p Seite #{current} von #{pages} - #{count} #{count !== 1 ? 'Rezepte' : 'Rezept'} 
+        
+        .pagination__next 
+            if current < pages
+                a(href=`/recipes/page/${parseInt(current)+1}`) weiter

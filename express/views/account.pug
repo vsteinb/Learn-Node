@@ -1,0 +1,18 @@
+extends layout 
+
+block content 
+    .inner 
+        form.form(action='/account' method='POST')
+            h2 #{title}
+
+            //- name
+            label(for='name') Name 
+            input(type='text' name='name' value=user.name required)
+
+            //- email
+            label(for='email') Email 
+            input(type='email' name='email' value=user.email required)
+
+            //- submit
+            input.button(type='submit' value!='Änderungen speichern &rarr;')
+
