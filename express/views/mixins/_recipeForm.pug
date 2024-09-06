@@ -5,15 +5,32 @@ mixin recipeForm(recipe={})
         label(for="name") Rezept für ...
         input(type="text" name="name" value=recipe.name)
 
+        //- photo
+        label(for="photo") schmackhaftes Bild vom fertigen Gericht
+        input(type="file" name="photo" id="photo" accept="image/gif, image/png, image/jpeg")
+        if recipe.photo
+            img(src=`/uploads/${recipe.photo}` alt=recipe.name width="200")
+        
         //- description
         label(for="description") Beschreibung
-        textarea(name="description")= recipe.description
+        textarea(name="description" placeholder="Kurze Beschreibung des fertigen Gerichts, z.B. für wie viele Personen")= recipe.description
 
-        //- photo
-        label(for="photo") fertiges Gericht
-            input(type="file" name="photo" id="photo" accept="image/gif, image/png, image/jpeg")
-            if recipe.photo
-                img(src=`/uploads/${recipe.photo}` alt=recipe.name width="200")
+
+        //- ingredients
+        label(for="ingredients") Zutaten
+        small(aria-description="ingredients") Pro Zeile immer nur eine Zutat, wie '2 Eier' oder '1TL Backpulver'
+        textarea(name="ingredients" placeholder="Welche und wie viele Zutaten braucht man?")= recipe.ingredients
+
+        //- steps
+        label(for="steps") Zubereitung
+        textarea(name="steps" placeholder="Wie bereitet man das zu?")= recipe.steps
+
+        //- stepsPhoto
+        small: label(for="stepsPhoto") Zubereitung als Bild (optional)
+        input(type="file" name="stepsPhoto" id="photo" accept="image/gif, image/png, image/jpeg")
+        if recipe.stepsPhoto
+            img(src=`/uploads/${recipe.stepsPhoto}` alt=`Zubereitung von ${recipe.name}` width="200")
+
 
         //- tags
         - const all_choices = ['Fisch', 'Fleisch', 'Vegetarisch', 'Vegan', 'Vorspeise', 'Hauptgericht', 'Beilage', 'Soße', 'Dessert', 'Snack']

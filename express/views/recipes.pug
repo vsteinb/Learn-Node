@@ -9,4 +9,5 @@ block content
             each recipe in recipes 
                 +recipeCard(recipe)
 
-        +pagination(pagination.page, pagination.pages, pagination.count)
+        if pagination.pages > 1
+            +pagination(pagination.page, pagination.pages, pagination.count)

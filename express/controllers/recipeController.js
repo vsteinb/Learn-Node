@@ -18,35 +18,58 @@ const multerOptions = {
         );
     }
 };
-/** loads a form-file with name 'photo' into memory to req.file */
-exports.upload = multer(multerOptions).single('photo');
+/** loads a form-files into memory to req.file */
+exports.upload = multer(multerOptions).fields([
+    { name: 'photo', maxCount: 1 },
+    { name: 'stepsPhoto', maxCount: 1 },
+]);
 
 
-/** runs after upload-middleware.  */
+/** runs after upload-middleware. Resizes and saves file in req.file to disk and saves reference in provided fieldname */
 exports.resize = async (req, res, next) => {
 
     // no photo uploaded?
-    if (!req.file) return next();
+    if (!req.files) return next();
 
-    // get new filename for photo
-    const extension = req.file.mimetype.split("/")[1];
-    req.body.photo = `${uuid.v4()}.${extension}`;
+    for (const fieldname of Object.keys(req.files)) {
+        const file = req.files[fieldname][0];
 
-    // resize
-    const photo = await jimp.read(req.file.buffer);
-    await photo.resize(800, jimp.AUTO);
+        // get new filename for photo
+        const extension = file.mimetype.split("/")[1];
+        req.body[fieldname] = `${uuid.v4()}.${extension}`;
 
-    // write to disc & continue with next middleware or view
-    await photo.write(`./public/uploads/${req.body.photo}`);
+        // resize
+        const photo = await jimp.read(file.buffer);
+        await photo.resize(800, jimp.AUTO);
+
+        // write to disc & continue with next middleware or view
+        await photo.write(`./public/uploads/${req.body[fieldname]}`);
+    }
+
     next();
 };
 
+exports.removeOldPhotos = async (req, res, next) => {
+    const recipe = await Recipe.findById(req.params.id);
+    
+    // remove old photo from ../public/uploads when modified
+    if (recipe?.photo && req.body.photo && recipe.photo !== req.body.photo) {
+        await recipe.removeFileOnDisk('photo');
+    }
+    if (recipe?.stepsPhoto && req.body.stepsPhoto && recipe.stepsPhoto !== req.body.stepsPhoto) {
+        await recipe.removeFileOnDisk('stepsPhoto');
+    }
+
+    next();
+};
+
+
 // merely a function to check the author, not a real middleware
 const isAuthor = (recipe, user) => {
-    if (!recipe.author.equals(user._id)) {
+    if (!recipe.author._id.equals(user._id)) {
         throw Error('Du bist nicht Autor*in dieses Rezepts!');
     }
-}
+};
 
 /****************** VIEWS ******************/
 
@@ -55,29 +78,29 @@ exports.addRecipe = (req, res) => {
 };
 
 exports.createRecipe = async (req, res) => {
-    req.body.author = req.user._id;
-    const recipe = await (new Recipe(req.body)).save();
+    req.body.author = req.user;
+
+    let recipe;
+    try {
+        recipe = await (new Recipe(req.body)).save();
+    } catch (err) {
+        const errorKeys = Object.keys(err.errors);
+        errorKeys.forEach(key => req.flash('error', err.errors[key].message));
+        return res.render('editRecipe', {title: 'Rezept anlegen', recipe: req.body, flashes: req.flash()});
+    }
 
     req.flash('success', `Du hast das Rezept für <b>${recipe.name}</b> erfolgreich angelegt!`);
     res.redirect(`/recipe/${recipe.slug}`);
 };
 
 exports.getRecipes = async (req, res) => {
-    const page = req.params.page || 1;
-    const limit = 25;
-    const skip = (page -1) * limit;
-
-    const recipesPromise = Recipe.find().skip(skip).limit(limit);
-    const countPromise = Recipe.count();
-    const [recipes, count] = await Promise.all([recipesPromise, countPromise]);
-    const pages = Math.ceil(count / limit);
-
-    if (!recipes.length) {
-        req.flash('info', `Seite ${page} gibt es leider nicht. Ich gebe dir stattdessen Seite ${pages}.`);
-        return res.redirect(`/recipes/page/${pages}`);
+    const context = await Recipe.getPagination(Recipe.find(), req.params.page);
+    if (!context.recipes.length) {
+        req.flash('info', `Seite ${context.pagination.page} gibt es leider nicht. Ich gebe dir stattdessen Seite ${context.pagination.pages}.`);
+        return res.redirect(`/recipes/page/${context.pagination.pages}`);
     }
 
-    res.render('recipes', { title: 'Rezepte', recipes, pagination: {page, count, pages} });
+    res.render('recipes', { title: 'Rezepte', ...context });
 };
 
 exports.editRecipe = async (req, res) => {
@@ -88,13 +111,19 @@ exports.editRecipe = async (req, res) => {
 };
 
 exports.updateRecipe = async (req, res) => {
+    let recipe;
+    try {
+        recipe = await Recipe.findByIdAndUpdate(req.params.id, req.body, {
+            new: true,
+            runValidators: true
+        }).exec();
+    } catch (err) {
+        const errorKeys = Object.keys(err.errors);
+        errorKeys.forEach(key => req.flash('error', err.errors[key].message));
 
-    // TODO remove old photo from /uploads when modified
-
-    const recipe = await Recipe.findByIdAndUpdate(req.params.id, req.body, {
-        new: true,
-        runValidators: true
-    }).exec();
+        recipe = await Recipe.findById(req.params.id);
+        return res.render('editRecipe', {title: `${recipe?.name || 'Rezept'} bearbeiten`, recipe: req.body, flashes: req.flash()});
+    }
 
     req.flash('success', `Du hast das Rezept für <b>${recipe.name}</b> erfolgreich angepasst! <a href="/recipe/${recipe.slug}">Rezept ansehen &rarr;</a>`);
     res.redirect(`/recipe/${recipe._id}/edit`);
@@ -152,8 +181,14 @@ exports.heartRecipe = async (req, res) => {
 };
 
 exports.getHearts = async (req, res) => {
-    const recipes = await Recipe.find({_id: { $in: req.user.hearts }});
-    res.render('recipes', { title: 'Fav Rezepte', recipes });
+    const context = await Recipe.getPagination(Recipe.find({_id: { $in: req.user.hearts }}), req.params.page);
+
+    if (!context.recipes.length) {
+        req.flash('info', `Seite ${context.pagination.page} gibt es leider nicht. Ich gebe dir stattdessen Seite ${context.pagination.pages}.`);
+        return res.redirect(`/hearts/page/${context.pagination.pages}`);
+    }
+
+    res.render('recipes', { title: 'Fav Rezepte', ...context });
 };
 
 

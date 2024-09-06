@@ -1,5 +1,7 @@
 const mongoose = require('mongoose');
 const slug = require('slugs');
+const fs = require('fs/promises');
+const path = require('path');
 
 const recipeSchema = new mongoose.Schema({
     name: {
@@ -12,12 +14,21 @@ const recipeSchema = new mongoose.Schema({
         type: String,
         trim: true
     },
-    photo: String,
+    photo: String,  // is an image name. Path leads into /public/uploads
     tags: [String],
-    // steps: {
-    //     type: [String],
-    //     required: 'Bitte beschreibe wie man das zubereitet'
-    // },
+
+    ingredients: {
+        type: String,
+        required: 'Für ein Rezept braucht es Zutaten',
+        trim: true
+    },
+    steps: {
+        type: String,
+        // required: 'Bitte beschreibe wie man das zubereitet'
+    },
+    stepsPhoto: {
+        type: String    // is an image name. Path leads into /public/uploads
+    },
 
     author: {
         type: mongoose.Schema.ObjectId,
@@ -44,13 +55,14 @@ recipeSchema.virtual('reviews', {
 recipeSchema.index({
     name: 'text',
     description: 'text',
+    ingredients: 'text',
 })
 
 
 // hooks
 
 function autopopulate(next) {
-    this.populate('reviews');
+    this.populate('reviews author');
     next();
 };
 function defaultSort(next) {
@@ -104,6 +116,32 @@ recipeSchema.statics.getTopRecipes = function() {
         { $limit: 10 }
     ]);
 };
+recipeSchema.statics.getPagination = async function(recipesPromise = Recipe.find(), page = 1) {
+    const limit = 25;
+    const skip = (page -1) * limit;
+
+    const countPromise = recipesPromise.clone().count();
+    const paginatedRecipesPromise = recipesPromise.clone().skip(skip).limit(limit);
+    const [recipes, count] = await Promise.all([paginatedRecipesPromise, countPromise]);
+    const pages = Math.ceil(count / limit);
+
+    return {recipes, pagination: {page, count, pages}};
+};
+
+
+recipeSchema.methods.removeFileOnDisk = async function(fieldname) {
+    if (!['photo', 'stepsPhoto'].includes(fieldname) || !this[fieldname]) { return; }
+
+    const photoPath = path.join(__dirname, `../public/uploads/`, this[fieldname]);
+    await fs.unlink(photoPath).catch((err) => {
+
+        // ignore error if photo does not exist
+        if (err.code === 'ENOENT')
+            throw Error(`Altes Foto '${fieldname}' konnte nicht gelöscht werden`);
+    
+        throw Error(`Problem beim Löschen des alten Fotos '${fieldname}': Errorcode ${err.code}`);
+    });
+}
 
 
 module.exports = mongoose.model('Recipe', recipeSchema);

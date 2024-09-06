@@ -12,13 +12,31 @@ block content
     
     .single__details.inner
         p #{recipe.description}
+
+        div(style="display: flex")
+            p(style="margin-right:1rem") von #{recipe.author.name}
+            img.avatar(src=recipe.author.gravatar)
+
         if recipe.tags
             ul.tags
                 each tag in recipe.tags 
                     li.tag 
                         a.tag__link(href=`/tags/${tag}`)
                             span.tag__text #{tag}
-        
+
+        h3 Zutaten
+        p!= h.cleanHtml((recipe.ingredients || '').replaceAll('\n', '<br>'))
+
+        if recipe.steps || recipe.stepsPhoto
+            h3 Zubereitung
+            if recipe.stepsPhoto
+                img(src=`/uploads/${recipe.stepsPhoto}`)
+
+            if recipe.steps
+                p!= h.cleanHtml(recipe.steps.replaceAll('\n', '<br>'))
+
+
+        h3 Feedback
         if user 
             +reviewForm(recipe)
 

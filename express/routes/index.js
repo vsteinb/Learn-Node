@@ -30,6 +30,7 @@ router.get('/recipe/:id/edit', catchErrors(recipeController.editRecipe));
 router.post('/add/:id',
     recipeController.upload,
     catchErrors(recipeController.resize),
+    catchErrors(recipeController.removeOldPhotos),
     catchErrors(recipeController.updateRecipe)
 );
 
@@ -43,6 +44,10 @@ router.get('/tags/:tag', catchErrors(recipeController.getRecipesByTag));
 
 // hearted recipes page
 router.get('/hearts',
+    authController.isLoggedIn,
+    catchErrors(recipeController.getHearts)
+);
+router.get('/hearts/page/:page',
     authController.isLoggedIn,
     catchErrors(recipeController.getHearts)
 );
